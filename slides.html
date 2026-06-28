@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FWFHP — PHQ-2 Screening Analysis, June 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+
+/* === THEME VARIABLES === */
+:root {
+    --bg:            #f7f6f4;
+    --surface:       #ffffff;
+    --text-primary:  #1c1c1e;
+    --text-secondary:#6b7280;
+    --text-muted:    #a0a0a8;
+    --accent-blue:   #2563a8;
+    --accent-red:    #c0392b;
+    --rule:          #e0ded9;
+    --stage-bg:      #d6d4cf;
+    --slide-bg:      #f7f6f4;
+    --font-display:  'Lora', Georgia, serif;
+    --font-body:     'Jost', system-ui, sans-serif;
+    --ease:          cubic-bezier(0.16, 1, 0.3, 1);
+    --dur:           0.5s;
+}
+
+/* === RESET === */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === VIEWPORT BASE (viewport-base.css) === */
+html, body {
+    width: 100%; height: 100%;
+    margin: 0; overflow: hidden;
+    background: var(--stage-bg);
+}
+.deck-viewport {
+    position: fixed; inset: 0;
+    overflow: hidden; background: var(--stage-bg);
+}
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg);
+}
+.slide {
+    position: absolute; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg);
+}
+.slide.active, .slide.visible {
+    visibility: visible; opacity: 1;
+    pointer-events: auto; z-index: 1;
+}
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+.deck-controls {
+    position: fixed; left: 50%; bottom: 22px;
+    transform: translateX(-50%); z-index: 1000;
+}
+@media print {
+    html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+    .deck-viewport { position: static; overflow: visible; background: #fff; }
+    .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+    .slide { position: relative; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; width: 1920px; height: 1080px; break-after: page; page-break-after: always; }
+    .slide:last-child { break-after: auto; page-break-after: auto; }
+    .deck-controls { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2ms !important; }
+}
+
+/* === REVEAL ANIMATIONS === */
+.reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.reveal:nth-child(1)  { transition-delay: 0.04s; }
+.reveal:nth-child(2)  { transition-delay: 0.10s; }
+.reveal:nth-child(3)  { transition-delay: 0.16s; }
+.reveal:nth-child(4)  { transition-delay: 0.22s; }
+.reveal:nth-child(5)  { transition-delay: 0.28s; }
+.reveal:nth-child(6)  { transition-delay: 0.34s; }
+.reveal:nth-child(7)  { transition-delay: 0.40s; }
+.reveal:nth-child(8)  { transition-delay: 0.46s; }
+.reveal:nth-child(9)  { transition-delay: 0.52s; }
+.reveal:nth-child(10) { transition-delay: 0.58s; }
+.reveal:nth-child(11) { transition-delay: 0.64s; }
+.reveal:nth-child(12) { transition-delay: 0.70s; }
+
+/* === SHARED: SLIDE HEADER === */
+.slide-header {
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 108px;
+    display: flex; align-items: center;
+    padding: 0 80px;
+    border-bottom: 1px solid var(--rule);
+}
+.slide-header .wordmark {
+    font-family: var(--font-body);
+    font-size: 16px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-muted); flex-shrink: 0;
+}
+.slide-header .slide-title {
+    flex: 1; text-align: center;
+    font-family: var(--font-display);
+    font-size: 34px; font-weight: 600;
+    color: var(--text-primary); letter-spacing: -0.01em;
+}
+.slide-header .slide-num {
+    font-family: var(--font-body);
+    font-size: 16px; font-weight: 400;
+    color: var(--text-muted); letter-spacing: 0.08em; flex-shrink: 0;
+}
+
+/* Blue rule under header */
+.header-rule {
+    position: absolute;
+    top: 108px; left: 80px; right: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-blue) 0%, transparent 80%);
+}
+
+/* Slide body area */
+.slide-body {
+    position: absolute;
+    top: 128px; left: 80px; right: 80px; bottom: 58px;
+}
+
+/* Shared footer */
+.slide-footer {
+    position: absolute;
+    bottom: 0; left: 0; right: 0; height: 56px;
+    display: flex; align-items: center;
+    padding: 0 80px;
+    border-top: 1px solid var(--rule);
+}
+.slide-footer span {
+    font-family: var(--font-body);
+    font-size: 15px; font-weight: 300;
+    color: var(--text-muted); letter-spacing: 0.03em;
+}
+.progress-bar {
+    position: absolute; left: 0; bottom: 0;
+    height: 3px; background: var(--accent-blue);
+    transition: width 0.4s var(--ease);
+}
+
+/* === SLIDE 1: TITLE === */
+.title-slide {
+    background: #1a1b1f !important;
+    display: flex; flex-direction: column;
+    justify-content: center; padding: 0 200px;
+}
+.title-slide::before {
+    content: '';
+    position: absolute; top: 0; bottom: 0; right: 0;
+    width: 580px;
+    background: linear-gradient(150deg, rgba(37,99,168,0.12) 0%, rgba(37,99,168,0.03) 100%);
+    border-left: 1px solid rgba(255,255,255,0.05);
+}
+.title-slide .t-kicker {
+    font-family: var(--font-body);
+    font-size: 18px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent-blue); margin-bottom: 36px;
+}
+.title-slide .t-rule {
+    width: 52px; height: 3px;
+    background: var(--accent-blue); border-radius: 2px;
+    margin-bottom: 40px;
+}
+.title-slide h1 {
+    font-family: var(--font-display);
+    font-size: 84px; font-weight: 700;
+    color: #edeae4;
+    line-height: 1.08; letter-spacing: -0.02em;
+    margin-bottom: 28px; max-width: 880px;
+}
+.title-slide .t-subtitle {
+    font-family: var(--font-display);
+    font-size: 34px; font-weight: 400; font-style: italic;
+    color: rgba(237,234,228,0.55); margin-bottom: 60px;
+}
+.title-slide .t-pills {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.title-slide .t-pill {
+    font-family: var(--font-body);
+    font-size: 17px; font-weight: 400;
+    color: rgba(237,234,228,0.45);
+    padding: 9px 22px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 50px; letter-spacing: 0.04em;
+}
+
+/* === SLIDE 2: STAT DISTRIBUTION === */
+.stat-row {
+    display: flex;
+    align-items: center; justify-content: center;
+    gap: 80px; height: 100%;
+}
+.stat-card {
+    flex: 1; max-width: 740px;
+    padding: 56px 64px;
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.07);
+    text-align: center; position: relative; overflow: hidden;
+}
+.stat-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 5px;
+}
+.stat-card.red::after  { background: var(--accent-red); }
+.stat-card.blue::after { background: var(--accent-blue); }
+.stat-card .sc-label {
+    font-family: var(--font-body);
+    font-size: 18px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-secondary); margin-bottom: 20px;
+}
+.stat-card .sc-num {
+    font-family: var(--font-display);
+    font-size: 128px; font-weight: 700;
+    line-height: 1; letter-spacing: -0.03em;
+}
+.stat-card.red  .sc-num { color: var(--accent-red); }
+.stat-card.blue .sc-num { color: var(--accent-blue); }
+.stat-card .sc-pct {
+    font-family: var(--font-body);
+    font-size: 38px; font-weight: 300;
+    color: var(--text-secondary); margin: 10px 0;
+}
+.stat-card .sc-desc {
+    font-family: var(--font-display);
+    font-size: 24px; font-weight: 400; font-style: italic;
+    color: var(--text-muted); line-height: 1.45;
+}
+.stat-vs {
+    width: 1px; height: 260px;
+    background: var(--rule); flex-shrink: 0;
+}
+
+/* === SLIDE 3: PIE CHART === */
+.chart-body {
+    display: flex; flex-direction: column;
+    height: 100%; padding-top: 10px;
+}
+.chart-wrap {
+    flex: 1; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.chart-wrap img {
+    max-height: 100%; max-width: 100%;
+    object-fit: contain; border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.chart-caption {
+    font-family: var(--font-body);
+    font-size: 20px; font-weight: 300; font-style: italic;
+    color: var(--text-secondary); margin-top: 14px; line-height: 1.5;
+}
+.chart-caption strong { font-style: normal; font-weight: 500; color: var(--text-primary); }
+
+/* === SLIDE 4: DIAGNOSES TABLE (table only) === */
+.diag-table-wrap {
+    padding-top: 28px;
+    display: flex; justify-content: center;
+}
+.diag-table {
+    width: 820px; border-collapse: collapse;
+    font-family: var(--font-body);
+}
+.diag-table thead th {
+    font-size: 16px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 0 0 16px; border-bottom: 2px solid var(--rule);
+    text-align: left;
+}
+.diag-table thead th:last-child { text-align: center; }
+.diag-table tbody tr { border-bottom: 1px solid var(--rule); }
+.diag-table tbody tr:last-child { border-bottom: none; }
+.diag-table tbody td {
+    font-size: 26px; font-weight: 300;
+    color: var(--text-primary); padding: 19px 0; line-height: 1.3;
+}
+.diag-table tbody td.count {
+    text-align: center;
+    font-size: 28px; font-weight: 600;
+}
+.diag-table .c1 { color: var(--accent-red); }
+.diag-table .c0 { color: var(--text-muted); }
+
+/* === SLIDE 5: CO-OCCURRENCE DIAGNOSES LIST === */
+.dx-list-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px 48px;
+    padding-top: 32px;
+    align-content: start;
+}
+.dx-item {
+    display: flex; align-items: center; gap: 20px;
+    padding: 22px 28px;
+    background: var(--surface);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.dx-code {
+    font-family: var(--font-body);
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--accent-blue);
+    background: rgba(37,99,168,0.08);
+    padding: 4px 10px; border-radius: 4px;
+    flex-shrink: 0; min-width: 68px; text-align: center;
+}
+.dx-name {
+    font-family: var(--font-body);
+    font-size: 26px; font-weight: 300;
+    color: var(--text-primary);
+}
+
+/* === CHART SLIDES (6, 7, 8, 9) === */
+.or-strip {
+    display: flex; align-items: center;
+    flex-wrap: wrap; gap: 0;
+    background: var(--surface);
+    border-top: 3px solid var(--accent-red);
+    border-radius: 0 0 6px 6px;
+    padding: 16px 24px;
+    margin-top: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.or-strip .or-label {
+    font-family: var(--font-body);
+    font-size: 17px; font-weight: 500;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--text-secondary); margin-right: 28px;
+}
+.or-strip .or-item {
+    font-family: var(--font-body);
+    font-size: 22px; font-weight: 400;
+    color: var(--text-primary); padding: 0 20px;
+    border-left: 1px solid var(--rule);
+}
+.or-strip .or-item:first-of-type { border-left: none; padding-left: 0; }
+.or-strip .or-item strong { font-weight: 600; color: var(--accent-red); }
+.or-strip .or-note {
+    font-family: var(--font-body);
+    font-size: 17px; font-weight: 300;
+    color: var(--text-muted); margin-left: auto; font-style: italic;
+}
+
+/* === SLIDE 11: REGRESSION TABLE === */
+.reg-table {
+    width: 100%; border-collapse: collapse;
+    font-family: var(--font-body);
+}
+.reg-table thead th {
+    font-size: 17px; font-weight: 600;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 0 24px 18px 0;
+    border-bottom: 2px solid var(--rule);
+    text-align: left;
+}
+.reg-table thead th:not(:first-child) { text-align: right; }
+.reg-table tbody tr { border-bottom: 1px solid var(--rule); }
+.reg-table tbody tr:last-child { border-bottom: none; }
+.reg-table tbody td {
+    font-size: 26px; font-weight: 300;
+    color: var(--text-primary);
+    padding: 18px 24px 18px 0;
+    line-height: 1.2;
+}
+.reg-table tbody td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.reg-table .sig-row { background: rgba(37,99,168,0.05); }
+.reg-table .sig-row td { font-weight: 400; }
+.reg-table .sig-row td:first-child { color: var(--accent-blue); font-weight: 500; }
+.reg-table .sig-row strong { font-weight: 700; color: var(--accent-blue); }
+.reg-note {
+    font-family: var(--font-body);
+    font-size: 19px; font-weight: 300; font-style: italic;
+    color: var(--text-muted); margin-top: 24px;
+}
+
+/* === SLIDE 10: FOREST PLOT === */
+.forest-grid {
+    display: grid;
+    grid-template-columns: 1fr 460px;
+    gap: 52px; height: 100%;
+    padding-top: 10px; align-items: start;
+}
+.forest-img-wrap {
+    height: 100%;
+    display: flex; align-items: center;
+}
+.forest-img-wrap img {
+    max-height: 820px; max-width: 100%;
+    object-fit: contain; border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.forest-sidebar {
+    display: flex; flex-direction: column; gap: 24px;
+    padding-top: 12px;
+}
+.forest-sidebar .fs-meta {
+    font-family: var(--font-body);
+    font-size: 20px; font-weight: 300;
+    color: var(--text-secondary); line-height: 1.6;
+    padding-bottom: 20px; border-bottom: 1px solid var(--rule);
+}
+.finding-card {
+    background: var(--surface); border-radius: 8px;
+    padding: 26px 30px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.finding-card h4 {
+    font-family: var(--font-body);
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.finding-card p {
+    font-family: var(--font-body);
+    font-size: 22px; font-weight: 300;
+    color: var(--text-primary); line-height: 1.55;
+}
+.finding-card p strong { font-weight: 600; }
+.finding-card.sig  { border-left: 4px solid var(--accent-blue); }
+.finding-card.sig  h4 { color: var(--accent-blue); }
+.finding-card.null { border-left: 4px solid var(--rule); }
+.finding-card.null h4 { color: var(--text-secondary); }
+
+/* === INLINE EDITOR === */
+.edit-hotzone {
+    position: fixed; top: 0; left: 0;
+    width: 80px; height: 80px; z-index: 10000; cursor: pointer;
+}
+.edit-toggle {
+    position: fixed; top: 16px; left: 16px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease; z-index: 10001;
+    background: rgba(28,28,30,0.82); color: #fff;
+    border: none; border-radius: 6px;
+    padding: 8px 16px; font-size: 14px; cursor: pointer;
+    font-family: var(--font-body);
+}
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+
+    </style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- ======================================================
+     SLIDE 1 — TITLE
+     ====================================================== -->
+<section class="slide title-slide active" aria-label="Title">
+    <p class="t-kicker reveal">Farm Worker Family Health Program</p>
+    <div class="t-rule reveal"></div>
+    <h1 class="reveal">PHQ-2 Screening<br>Analysis</h1>
+    <p class="t-subtitle reveal">Night Camp Data &mdash; June 2026</p>
+    <div class="t-pills reveal">
+        <span class="t-pill">Internal Data Team Review</span>
+        <span class="t-pill">n&nbsp;=&nbsp;1,398 patients</span>
+        <span class="t-pill">FWFHP Program</span>
+    </div>
+</section>
+
+<!-- ======================================================
+     SLIDE 2 — PHQ-2 SCORE DISTRIBUTION (STAT CARDS)
+     ====================================================== -->
+<section class="slide" aria-label="PHQ-2 score distribution">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">PHQ-2 Score Distribution</h2>
+        <span class="slide-num">02 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body" style="display:flex;align-items:center;justify-content:center;">
+        <div class="stat-row">
+            <div class="stat-card red reveal">
+                <p class="sc-label">Positive Screen &mdash; PHQ-2 &gt; 2</p>
+                <p class="sc-num">42</p>
+                <p class="sc-pct">3.0% of patients</p>
+                <p class="sc-desc">Screened positive for<br>depressive symptoms</p>
+            </div>
+            <div class="stat-vs reveal"></div>
+            <div class="stat-card blue reveal">
+                <p class="sc-label">Negative Screen &mdash; PHQ-2 &le; 2</p>
+                <p class="sc-num">1,356</p>
+                <p class="sc-pct">97.0% of patients</p>
+                <p class="sc-desc">Below the clinical<br>concern threshold</p>
+            </div>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:20%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 3 — PIE CHART (from dataframes.py)
+     PHQ-2 > 2 prevalence: FWFHP vs NHANES Hispanic
+     ====================================================== -->
+<section class="slide" aria-label="PHQ-2 positive screen prevalence pie charts">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">PHQ-2 &gt; 2 Prevalence</h2>
+        <span class="slide-num">03 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body">
+        <div class="chart-body">
+            <div class="chart-wrap reveal">
+                <img src="charts/pie_chart.png" alt="Two pie charts comparing PHQ-2 positive screen prevalence: FWFHP (2.8%) and NHANES Hispanic (12.4%)">
+            </div>
+            <p class="chart-caption reveal">
+                <strong>FWFHP:</strong> 2.8% of patients screened positive (PHQ-2 &gt; 2), n&nbsp;=&nbsp;1,501 &nbsp;&middot;&nbsp;
+                <strong>NHANES Hispanic:</strong> 12.4% screened positive, n&nbsp;=&nbsp;5,489
+            </p>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:30%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 4 — DEPRESSION & ANXIETY DIAGNOSES (data only)
+     ====================================================== -->
+<section class="slide" aria-label="Depression and anxiety diagnosis counts">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">Depression &amp; Anxiety Diagnoses (N&nbsp;=&nbsp;1,501)</h2>
+        <span class="slide-num">04 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body">
+        <div class="diag-table-wrap reveal">
+            <table class="diag-table">
+                <thead>
+                    <tr>
+                        <th>Diagnosis</th>
+                        <th style="text-align:center;">Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mild Depressive Disorder</td>
+                        <td class="count c1">1</td>
+                    </tr>
+                    <tr>
+                        <td>Moderate Depressive Disorder</td>
+                        <td class="count c0">0</td>
+                    </tr>
+                    <tr>
+                        <td>Severe Depressive Disorder</td>
+                        <td class="count c0">0</td>
+                    </tr>
+                    <tr>
+                        <td>Depressive Disorder w/ Psychotic Features</td>
+                        <td class="count c0">0</td>
+                    </tr>
+                    <tr>
+                        <td>Anxiety Disorder</td>
+                        <td class="count c0">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:40%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 5 — CO-OCCURRENCE DIAGNOSES CHECKED
+     12 diagnoses from DX_MAP in co_occurences.py
+     ====================================================== -->
+<section class="slide" aria-label="Co-occurring diagnoses analyzed">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">Co-occurring Diagnoses Analyzed</h2>
+        <span class="slide-num">05 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body">
+        <div class="dx-list-grid">
+            <div class="dx-item reveal"><span class="dx-code">a_dx7</span><span class="dx-name">Dehydration</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx9</span><span class="dx-name">Elevated BP</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx10</span><span class="dx-name">Elevated Glucose</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx11</span><span class="dx-name">Eye Pain</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx12</span><span class="dx-name">Fatigue</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx14</span><span class="dx-name">Headache</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx62</span><span class="dx-name">Insomnia</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx16</span><span class="dx-name">Milaria</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx18</span><span class="dx-name">Myalgia</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx20</span><span class="dx-name">Obesity</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx28</span><span class="dx-name">STIs</span></div>
+            <div class="dx-item reveal"><span class="dx-code">a_dx30</span><span class="dx-name">Sunburn</span></div>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:50%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 6 — CHART 1: P(Dx | PHQ-2 > 2)
+     ====================================================== -->
+<section class="slide" aria-label="Conditional probability of diagnosis given positive PHQ-2 screen">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">P(Diagnosis | PHQ-2 &gt; 2)</h2>
+        <span class="slide-num">06 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body">
+        <div class="chart-body">
+            <div class="chart-wrap reveal">
+                <img src="charts/chart1_p_high_phq2.png" alt="Bar chart: conditional probability of each diagnosis among patients with PHQ-2 greater than 2">
+            </div>
+            <p class="chart-caption reveal">Conditional probability of each diagnosis among the <strong>42 patients</strong> who screened positive (PHQ-2 &gt; 2).</p>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:60%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 7 — CHART 2: HIGH vs LOW COMPARISON
+     ====================================================== -->
+<section class="slide" aria-label="Comparison of diagnosis probability by PHQ-2 group">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">Co-occurring Conditions: High vs. Low PHQ-2</h2>
+        <span class="slide-num">07 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body">
+        <div class="chart-body">
+            <div class="chart-wrap reveal">
+                <img src="charts/chart2_comparison.png" alt="Grouped bar chart comparing conditional probability of each diagnosis between PHQ-2 above 2 and PHQ-2 at or below 2">
+            </div>
+            <p class="chart-caption reveal"><span style="color:var(--accent-red);font-style:normal;font-weight:500;">Red = PHQ-2 &gt; 2 (n=42)</span> &nbsp;&middot;&nbsp; <span style="color:var(--accent-blue);font-style:normal;font-weight:500;">Blue = PHQ-2 &le; 2 (n=1,356)</span></p>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:70%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 8 — CHART 3: ODDS RATIOS
+     ====================================================== -->
+<section class="slide" aria-label="Odds ratios for co-occurring diagnoses">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">Odds Ratios: Co-occurring Conditions</h2>
+        <span class="slide-num">08 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body">
+        <div class="chart-body">
+            <div class="chart-wrap reveal">
+                <img src="charts/chart3_odds_ratios.png" alt="Bar chart of odds ratios for each diagnosis comparing PHQ-2 high versus low groups; red bars indicate OR above 1">
+            </div>
+            <div class="or-strip reveal">
+                <span class="or-label">Top ORs</span>
+                <span class="or-item"><strong>Milaria 5.49</strong></span>
+                <span class="or-item"><strong>Dehydration 3.65</strong></span>
+                <span class="or-item"><strong>Elevated BP 2.90</strong></span>
+                <span class="or-item"><strong>Fatigue 2.18</strong></span>
+                <span class="or-note">Dashed line = OR 1 (no association). Obesity: OR undefined (0 cases in both groups).</span>
+            </div>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:80%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 9 — CHART 4: RAW COUNTS
+     ====================================================== -->
+<section class="slide" aria-label="Raw diagnosis counts by PHQ-2 group">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">Raw Diagnosis Counts by PHQ-2 Group</h2>
+        <span class="slide-num">09 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body">
+        <div class="chart-body">
+            <div class="chart-wrap reveal">
+                <img src="charts/chart4_counts.png" alt="Grouped bar chart of raw diagnosis counts split by PHQ-2 group">
+            </div>
+            <p class="chart-caption reveal"><span style="color:var(--accent-red);font-style:normal;font-weight:500;">Red = PHQ-2 &gt; 2 (n=42)</span> &nbsp;&middot;&nbsp; <span style="color:var(--accent-blue);font-style:normal;font-weight:500;">Blue = PHQ-2 &le; 2 (n=1,356)</span></p>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:90%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 10 — FOREST PLOT: PREDICTORS
+     ====================================================== -->
+<section class="slide" aria-label="Logistic regression: predictors of a positive PHQ-2 screen">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">Predictors of a Positive PHQ-2 Screen</h2>
+        <span class="slide-num">10 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body">
+        <div class="forest-grid">
+            <div class="forest-img-wrap reveal">
+                <img src="charts/forest_plot.png" alt="Forest plot from logistic regression predicting PHQ-2 score above 2 using camp, age, and gender">
+            </div>
+            <div class="forest-sidebar">
+                <p class="fs-meta reveal">
+                    Logistic regression<br>
+                    Predictors: Camp, Age, Gender<br>
+                    Reference: Camp 1 &middot; Log-scale x-axis<br>
+                    N&nbsp;=&nbsp;1,335 (after listwise deletion)
+                </p>
+                <div class="finding-card sig reveal">
+                    <h4>Significant (p&nbsp;=&nbsp;0.003)</h4>
+                    <p><strong>Gender &mdash; OR&nbsp;&asymp;&nbsp;3.23</strong><br>One gender is approximately 3&times; more likely to score PHQ-2 &gt; 2.</p>
+                </div>
+                <div class="finding-card null reveal">
+                    <h4>Not Significant</h4>
+                    <p>Camp location (vs. Camp 1) and age per year were not statistically significant predictors.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:91%"></div>
+    </footer>
+</section>
+
+<!-- ======================================================
+     SLIDE 11 — LOGISTIC REGRESSION: OR TABLE
+     Exact OR, 95% CI, and p-values for all predictors
+     Reference: Camp 1. Significant row highlighted.
+     ====================================================== -->
+<section class="slide" aria-label="Logistic regression results table">
+    <header class="slide-header">
+        <span class="wordmark">FWFHP</span>
+        <h2 class="slide-title">Logistic Regression Results</h2>
+        <span class="slide-num">11 / 11</span>
+    </header>
+    <div class="header-rule"></div>
+    <div class="slide-body" style="display:flex;flex-direction:column;padding-top:28px;">
+        <table class="reg-table reveal">
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>Odds Ratio</th>
+                    <th>95% CI Lower</th>
+                    <th>95% CI Upper</th>
+                    <th>p-value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Camp 2 vs Camp 1</td><td>3.605</td><td>0.389</td><td>33.402</td><td>0.259</td></tr>
+                <tr><td>Camp 3 vs Camp 1</td><td>1.401</td><td>0.142</td><td>13.846</td><td>0.773</td></tr>
+                <tr><td>Camp 5 vs Camp 1</td><td>0.266</td><td>0.016</td><td>4.377</td><td>0.354</td></tr>
+                <tr><td>Camp 6 vs Camp 1</td><td>1.946</td><td>0.255</td><td>14.863</td><td>0.521</td></tr>
+                <tr><td>Camp 8 vs Camp 1</td><td>1.224</td><td>0.134</td><td>11.205</td><td>0.858</td></tr>
+                <tr><td>Camp 9 vs Camp 1</td><td>0.901</td><td>0.091</td><td>8.885</td><td>0.929</td></tr>
+                <tr><td>Age (per year)</td><td>0.980</td><td>0.940</td><td>1.022</td><td>0.344</td></tr>
+                <tr class="sig-row"><td>Gender</td><td>3.233</td><td>1.483</td><td>7.050</td><td><strong>0.003</strong></td></tr>
+            </tbody>
+        </table>
+        <p class="reg-note reveal">Reference: Camp 1 &middot; N&nbsp;=&nbsp;1,335 (after listwise deletion) &middot; Camp 7 excluded (perfect separation)</p>
+    </div>
+    <footer class="slide-footer">
+        <span>Farm Worker Family Health Program &middot; PHQ-2 Screening Analysis &middot; June 2026</span>
+        <div class="progress-bar" style="width:100%"></div>
+    </footer>
+</section>
+
+</main>
+</div>
+
+<!-- Edit affordance -->
+<div class="edit-hotzone" id="editHotzone"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">&#9998; Edit</button>
+
+<script>
+/* === SLIDE CONTROLLER === */
+class Deck {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.n = this.slides.length;
+        this.i = 0;
+        this.stage = document.getElementById('deckStage');
+        this.scaleStage();
+        window.addEventListener('resize', () => this.scaleStage());
+        this.keys();
+        this.touch();
+        this.wheel();
+        this.go(0);
+    }
+
+    scaleStage() {
+        const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        const x = (window.innerWidth  - 1920 * f) / 2;
+        const y = (window.innerHeight - 1080 * f) / 2;
+        this.stage.style.transform = `translate(${x}px,${y}px) scale(${f})`;
+    }
+
+    go(idx) {
+        this.i = Math.max(0, Math.min(idx, this.n - 1));
+        this.slides.forEach((s, j) => {
+            const on = j === this.i;
+            s.classList.toggle('active', on);
+            if (on) { requestAnimationFrame(() => s.classList.add('visible')); }
+            else     { s.classList.remove('visible'); }
+        });
+    }
+
+    next() { this.go(this.i + 1); }
+    prev() { this.go(this.i - 1); }
+
+    keys() {
+        document.addEventListener('keydown', e => {
+            if (e.target.getAttribute('contenteditable')) return;
+            if (['ArrowRight','ArrowDown','Space','PageDown'].includes(e.code)) { e.preventDefault(); this.next(); }
+            if (['ArrowLeft','ArrowUp','PageUp'].includes(e.code))              { e.preventDefault(); this.prev(); }
+        });
+    }
+
+    touch() {
+        let sx = 0, sy = 0;
+        document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+        document.addEventListener('touchend',   e => {
+            const dx = e.changedTouches[0].clientX - sx;
+            const dy = e.changedTouches[0].clientY - sy;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) { dx < 0 ? this.next() : this.prev(); }
+        }, {passive:true});
+    }
+
+    wheel() {
+        let last = 0;
+        document.addEventListener('wheel', e => {
+            const now = Date.now();
+            if (now - last < 700) return;
+            last = now;
+            e.deltaY > 0 ? this.next() : this.prev();
+        }, {passive:true});
+    }
+}
+
+/* === INLINE EDITOR === */
+class Editor {
+    constructor() { this.isActive = false; }
+
+    toggle() {
+        this.isActive = !this.isActive;
+        const btn = document.getElementById('editToggle');
+        btn.classList.toggle('active', this.isActive);
+        btn.textContent = this.isActive ? '💾 Save' : '✎ Edit';
+        document.querySelectorAll('.slide p, .slide li, .slide td, .slide h1, .slide h2.slide-title, .slide strong')
+            .forEach(el => {
+                el.setAttribute('contenteditable', this.isActive ? 'true' : 'false');
+                el.style.outline = this.isActive ? '1px dashed rgba(37,99,168,0.25)' : '';
+            });
+        if (!this.isActive) {
+            localStorage.setItem('fwfhp_deck', document.getElementById('deckStage').innerHTML);
+        }
+    }
+}
+
+const deck   = new Deck();
+const editor = new Editor();
+
+/* Hotzone hover (JS-based, not CSS ~) */
+const hotzone = document.getElementById('editHotzone');
+const editBtn = document.getElementById('editToggle');
+let hideTimer = null;
+
+const showBtn  = () => { clearTimeout(hideTimer); editBtn.classList.add('show'); };
+const schedHide = () => { hideTimer = setTimeout(() => { if (!editor.isActive) editBtn.classList.remove('show'); }, 400); };
+
+hotzone.addEventListener('mouseenter', showBtn);
+hotzone.addEventListener('mouseleave', schedHide);
+editBtn.addEventListener('mouseenter', showBtn);
+editBtn.addEventListener('mouseleave', schedHide);
+hotzone.addEventListener('click', () => editor.toggle());
+editBtn.addEventListener('click',  () => editor.toggle());
+
+document.addEventListener('keydown', e => {
+    if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) editor.toggle();
+    if ((e.ctrlKey || e.metaKey) && e.key === 's' && editor.isActive) { e.preventDefault(); editor.toggle(); }
+});
+</script>
+</body>
+</html>

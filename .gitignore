@@ -1,0 +1,14 @@
+# Night Camp data — transferred manually
+Night Camp/
+
+# Python
+__pycache__/
+*.py[cod]
+.env
+*.egg-info/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
