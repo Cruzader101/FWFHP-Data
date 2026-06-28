@@ -1,0 +1,77 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1782677282.9837658,
+    "ast_hash": "598cb075410bcd95220ac90bbb60344a",
+    "semantic_hash": "598cb075410bcd95220ac90bbb60344a"
+  },
+  ".vscode/settings.json": {
+    "mtime": 1782665030.7590823,
+    "ast_hash": "3b7b8e2d191c496fd9c13b692f11ce7a",
+    "semantic_hash": "3b7b8e2d191c496fd9c13b692f11ce7a"
+  },
+  "analyses.py": {
+    "mtime": 1782665030.7722154,
+    "ast_hash": "101e201da6885f3f065d603c3ee22b32",
+    "semantic_hash": "101e201da6885f3f065d603c3ee22b32"
+  },
+  "co_occurences.py": {
+    "mtime": 1782665030.7773747,
+    "ast_hash": "62ac00a7c383a0e940131301bf88aa30",
+    "semantic_hash": "62ac00a7c383a0e940131301bf88aa30"
+  },
+  "dataframes.py": {
+    "mtime": 1782665030.7783763,
+    "ast_hash": "65cbbb97f295426b40e568dc33c36cbd",
+    "semantic_hash": "65cbbb97f295426b40e568dc33c36cbd"
+  },
+  "CLAUDE.md": {
+    "mtime": 1782677282.981627,
+    "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
+    "semantic_hash": "8a6643a420fdad6bfb583523bc6cef16"
+  },
+  "read_june15.md": {
+    "mtime": 1782665030.7783763,
+    "ast_hash": "126b79a85ccea7822154fcd9d9139051",
+    "semantic_hash": "126b79a85ccea7822154fcd9d9139051"
+  },
+  "read_june17.md": {
+    "mtime": 1782665030.7783763,
+    "ast_hash": "4370b4b6d79a158b71837b99dc075451",
+    "semantic_hash": "4370b4b6d79a158b71837b99dc075451"
+  },
+  "slides.html": {
+    "mtime": 1782665030.779845,
+    "ast_hash": "83f2ab2ae115e05a3639bbc01c9c73f3",
+    "semantic_hash": "83f2ab2ae115e05a3639bbc01c9c73f3"
+  },
+  "charts/chart1_p_high_phq2.png": {
+    "mtime": 1782665030.7722154,
+    "ast_hash": "ff95354a240ecfb9b8563c1491d5ee0a",
+    "semantic_hash": "ff95354a240ecfb9b8563c1491d5ee0a"
+  },
+  "charts/chart2_comparison.png": {
+    "mtime": 1782665030.7742636,
+    "ast_hash": "f5fe3298a071692296ce4da30e8d8373",
+    "semantic_hash": "f5fe3298a071692296ce4da30e8d8373"
+  },
+  "charts/chart3_odds_ratios.png": {
+    "mtime": 1782665030.775313,
+    "ast_hash": "a630952105d73c3ad7cbcc31b7be3bd5",
+    "semantic_hash": "a630952105d73c3ad7cbcc31b7be3bd5"
+  },
+  "charts/chart4_counts.png": {
+    "mtime": 1782665030.775313,
+    "ast_hash": "5ee8efe625fbc53baecd0ef33291eb8c",
+    "semantic_hash": "5ee8efe625fbc53baecd0ef33291eb8c"
+  },
+  "charts/forest_plot.png": {
+    "mtime": 1782665030.7763762,
+    "ast_hash": "965b7ee56a97a5780e8f2d9c1ea145bf",
+    "semantic_hash": "965b7ee56a97a5780e8f2d9c1ea145bf"
+  },
+  "charts/pie_chart.png": {
+    "mtime": 1782665030.7773747,
+    "ast_hash": "9895212e2980f8f65b2ebe6d47a26316",
+    "semantic_hash": "9895212e2980f8f65b2ebe6d47a26316"
+  }
+}
