@@ -4,9 +4,19 @@ import pandas as pd
 import statsmodels.formula.api as smf
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+from statsmodels.stats.proportion import proportions_ztest, proportion_confint
 
 NHANES_data = pd.read_csv("./NHANES/df_Hispanic_NHANES.csv")
-FWFHP_data = pd.read_csv("./Night Camp/FarmWorkerFamilyHeal-PHQ2WithDiagnosis_DATA_2026-06-15_0914.csv")
+FWFHP_data = pd.read_csv("./Night Camp Data/FarmWorkerFamilyHeal-DemographicDataWithP_DATA_LABELS_2026-06-28_1652.csv")
+FWFHP_data = FWFHP_data.rename(columns={
+    "Record ID":              "record_id",
+    "PHQ-2 Score":            "a_phq2_score",
+    "Camp":                   "camp",
+    "Age":                    "a_age",
+    "Sex":                    "gender",
+    "Z13.89 Drug Use Screen": "drug_use",
+})
 
 # %%
 
@@ -46,6 +56,47 @@ odds_ratio = odds_FWFHP / odds_NHANES
 
 print("Odds Ratio:", odds_ratio)
 
+# OR confidence interval (delta method on log-odds) and two-proportion z-test
+log_or     = np.log(odds_ratio)
+se_log_or  = np.sqrt(1/len(FWFHP_yes) + 1/len(FWFHP_no) + 1/len(NHANES_yes) + 1/len(NHANES_no))
+or_lower   = np.exp(log_or - 1.96 * se_log_or)
+or_upper   = np.exp(log_or + 1.96 * se_log_or)
+
+z_stat, p_nhanes_cmp = proportions_ztest(
+    [len(FWFHP_yes), len(NHANES_yes)],
+    [len(FWFHP_yes) + len(FWFHP_no), len(NHANES_yes) + len(NHANES_no)]
+)
+print(f"OR: {odds_ratio:.3f} (95% CI: {or_lower:.3f}–{or_upper:.3f})")
+print(f"Two-proportion z-test: z = {z_stat:.3f}, p = {p_nhanes_cmp:.4e}")
+
+# NHANES comparison chart with CI
+p_fwfhp  = len(FWFHP_yes) / (len(FWFHP_yes) + len(FWFHP_no))
+p_nhanes = len(NHANES_yes) / (len(NHANES_yes) + len(NHANES_no))
+ci_fwfhp  = proportion_confint(len(FWFHP_yes),  len(FWFHP_yes) + len(FWFHP_no),  method='normal')
+ci_nhanes = proportion_confint(len(NHANES_yes), len(NHANES_yes) + len(NHANES_no), method='normal')
+
+fig, ax = plt.subplots(figsize=(7, 5))
+groups = ['FWFHP\n(Migrant Farmworkers)', 'NHANES\n(Hispanic Reference)']
+props  = [p_fwfhp, p_nhanes]
+yerr   = [[p_fwfhp - ci_fwfhp[0], p_nhanes - ci_nhanes[0]],
+          [ci_fwfhp[1] - p_fwfhp, ci_nhanes[1] - p_nhanes]]
+bars = ax.bar(groups, props, color=['tomato', 'steelblue'], edgecolor='white', linewidth=0.6, width=0.5)
+ax.errorbar(groups, props, yerr=yerr, fmt='none', color='black', capsize=6, linewidth=1.5)
+ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1, decimals=1))
+ax.set_ylabel('PHQ-2 Positive Rate (%)')
+p_label = "p < 0.001" if p_nhanes_cmp < 0.001 else f"p = {p_nhanes_cmp:.4f}"
+ax.set_title(
+    f'PHQ-2 Positive Prevalence: FWFHP vs. NHANES Hispanic\n'
+    f'OR = {odds_ratio:.2f} (95% CI: {or_lower:.2f}–{or_upper:.2f}), {p_label}',
+    fontsize=12, fontweight='bold'
+)
+for bar, prop in zip(bars, props):
+    ax.text(bar.get_x() + bar.get_width() / 2, prop + 0.002,
+            f'{prop:.1%}', ha='center', va='bottom', fontsize=12, fontweight='bold')
+plt.tight_layout()
+plt.savefig('charts/chart_nhanes_ci.png', dpi=150)
+plt.show()
+
 # %%
 
 # Significance Testing
@@ -54,7 +105,8 @@ print("Odds Ratio:", odds_ratio)
 
 # Fixing missing data, causing singular matrix error in logistic regression.
 
-FWFHP_clean = FWFHP_data.dropna(subset=["PHQ2_binary", "camp", "a_age", "gender", "a_phq2_score"])
+FWFHP_clean = FWFHP_data.dropna(subset=["PHQ2_binary", "camp", "a_age", "gender", "a_phq2_score", "drug_use"])
+
 
 print(f"Original rows: {len(FWFHP_data)}")
 print(f"Clean rows: {len(FWFHP_clean)}")
@@ -67,24 +119,33 @@ print(FWFHP_data["camp"].value_counts())
 
 import statsmodels.formula.api as smf
 
-FWFHP_clean_no_camp7 = FWFHP_clean[FWFHP_clean["camp"] != 7]
+# Exclude camps with perfect separation (all PHQ2_binary = 0 or all = 1)
+camp_outcome = FWFHP_clean.groupby("camp")["PHQ2_binary"].nunique()
+valid_camps = camp_outcome[camp_outcome > 1].index
+FWFHP_clean_no_camp7 = FWFHP_clean[FWFHP_clean["camp"].isin(valid_camps)]
 
-explor_fit = smf.logit("PHQ2_binary ~ C(camp) + a_age + gender", data = FWFHP_clean_no_camp7).fit()
+explor_fit = smf.logit("PHQ2_binary ~ C(camp) + a_age + gender + drug_use", data = FWFHP_clean_no_camp7).fit()
 
 print(explor_fit.summary())          # coefficients (log-odds), SEs, p-values
 
 
 # %%
 
-# Gender Odd Ratios
-gender_odds = np.exp(explor_fit.params["gender"]) # 
-ci_gender = np.exp(explor_fit.conf_int().loc["gender"]) # confidence interval
+# Gender Odd Ratios (gender is text so statsmodels names the param "gender[T.Male]")
+gender_param = [p for p in explor_fit.params.index if p.startswith("gender")][0]
+gender_odds = np.exp(explor_fit.params[gender_param])
+ci_gender = np.exp(explor_fit.conf_int().loc[gender_param])
 
 # Age Odd Ratios
 age_odds = np.exp(explor_fit.params["a_age"])
 ci_age = np.exp(explor_fit.conf_int().loc["a_age"])
 
-# Camp Odd Ratios 
+# Drug Use Odds Ratio
+drug_param = [p for p in explor_fit.params.index if p.startswith("drug_use")][0]
+drug_odds  = np.exp(explor_fit.params[drug_param])
+ci_drug    = np.exp(explor_fit.conf_int().loc[drug_param])
+
+# Camp Odd Ratios
 camp_odds = np.exp(explor_fit.params.filter(like="C(camp)"))
 ci_camp = np.exp(explor_fit.conf_int().filter(like="C(camp)"))
 
@@ -96,19 +157,23 @@ ci_camp = np.exp(explor_fit.conf_int().filter(like="C(camp)"))
 # Build a combined dataframe of all predictors
 rows = []
 
-# Camp levels (reference = camp 1, excluded from params)
-ci_all = explor_fit.conf_int()  # full CI table; columns are positional (iloc), not named
+# Camp levels (reference = first alphabetical camp after exclusions)
+ref_camp = sorted(valid_camps)[0]
+ci_all = explor_fit.conf_int()
 for label, or_val in camp_odds.items():
-    camp_num = label.replace("C(camp)[T.", "").replace("]", "")
+    camp_name = label.replace("C(camp)[T.", "").replace("]", "")
     rows.append({
-        "Variable": f"Camp {camp_num} vs. Camp 1",
+        "Variable": f"{camp_name} vs. {ref_camp}",
         "OR": or_val,
         "Lower": np.exp(ci_all.loc[label].iloc[0]),
         "Upper": np.exp(ci_all.loc[label].iloc[1]),
     })
 
-rows.append({"Variable": "Age (per year)", "OR": age_odds, "Lower": ci_age[0], "Upper": ci_age[1]})
-rows.append({"Variable": "Gender", "OR": gender_odds, "Lower": ci_gender[0], "Upper": ci_gender[1]})
+gender_label = gender_param.replace("gender[T.", "").replace("]", "")
+drug_label   = drug_param.replace("drug_use[T.", "").replace("]", "")
+rows.append({"Variable": "Age (per year)",           "OR": age_odds,   "Lower": ci_age[0],   "Upper": ci_age[1]})
+rows.append({"Variable": f"Gender: {gender_label}",  "OR": gender_odds,"Lower": ci_gender[0],"Upper": ci_gender[1]})
+rows.append({"Variable": f"Drug Use: {drug_label}",  "OR": drug_odds,  "Lower": ci_drug[0],  "Upper": ci_drug[1]})
 
 forest_df = pd.DataFrame(rows)
 
@@ -130,13 +195,13 @@ ax.axvline(x=1, color="black", linestyle="--", linewidth=1)  # null effect refer
 ax.set_yticks(list(y_pos))
 ax.set_yticklabels(forest_df["Variable"].tolist())
 ax.set_xlabel("Odds Ratio (95% CI)", fontsize=12)
-ax.set_title("Odds Ratios for PHQ-2 Score > 2\n(Logistic Regression, Reference: Camp 1)", fontsize=13)
+ax.set_title(f"Odds Ratios for PHQ-2 Score > 2\n(Logistic Regression, Reference: {ref_camp})", fontsize=13)
 ax.set_xscale("log")  # log scale so CI whiskers appear symmetric
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:g}"))
 ax.grid(axis="x", linestyle=":", alpha=0.5)
 
 plt.tight_layout()
-plt.savefig("forest_plot.png", dpi=150, bbox_inches="tight")
+plt.savefig("charts/forest_plot.png", dpi=150, bbox_inches="tight")
 plt.show()
 
 # %%
