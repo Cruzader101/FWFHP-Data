@@ -8,7 +8,8 @@ import pyreadstat as pr
 
 # Loading PHQ-2 data, total score over 2 and percentage
 
-df_PHQ2 = pd.read_csv("./Night Camp/FarmWorkerFamilyHeal-PHQ2WithDiagnosis_DATA_2026-06-15_0914.csv")
+df_PHQ2 = pd.read_csv("./Night Camp Data/FarmWorkerFamilyHeal-DemographicDataWithP_DATA_LABELS_2026-06-28_1652.csv")
+df_PHQ2 = df_PHQ2.rename(columns={"Record ID": "record_id", "PHQ-2 Score": "a_phq2_score"})
 
 count_FWFHP = (df_PHQ2["a_phq2_score"] > 2).sum()
 
@@ -120,7 +121,6 @@ df_merged_NHANES = pd.merge(demo_col, DPQ_col, on='SEQN', how='inner')
 
 df_Hispanic_NHANES = df_merged_NHANES[df_merged_NHANES['RIDRETH3'].isin([1, 2])]
 
-output_path = r"C:\Users\cruzm\OneDrive\Documents\FWFHP Data\df_Hispanic_NHANES.csv"
-df_Hispanic_NHANES.to_csv(output_path, index=False)
+df_Hispanic_NHANES.to_csv("./NHANES/df_Hispanic_NHANES.csv", index=False)
 
 # %%
