@@ -36,7 +36,7 @@ dx = dx.rename(columns={"Record ID": "record_id"})
 df = phq2[['record_id', 'a_phq2_score']].merge(dx, on='record_id', how='inner')
 df = df.dropna(subset=['a_phq2_score'])
 
-# REDCap coding: 1 = present, 2 = absent
+# DATA_LABELS export: each diagnosis column holds the text "Yes"/"No" (blank = absent).
 dx_cols = list(DX_MAP.keys())
 for col in dx_cols:
     df[col] = (df[col] == "Yes").astype(int)

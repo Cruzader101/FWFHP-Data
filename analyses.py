@@ -22,6 +22,11 @@ FWFHP_data = FWFHP_data.rename(columns={
 
 #Adding binary column for PHQ-2 score greater than 2 for both datasets
 
+# Keep only valid PHQ-2 responders; otherwise a missing score is silently binarized
+# to 0 and inflates the "negative" group (and the denominator) in both cohorts.
+NHANES_data = NHANES_data.dropna(subset=["phq2_score"])
+FWFHP_data  = FWFHP_data.dropna(subset=["a_phq2_score"])
+
 NHANES_data["PHQ2_binary"] = (NHANES_data["phq2_score"] > 2).astype(int)
 FWFHP_data["PHQ2_binary"] = (FWFHP_data["a_phq2_score"] > 2).astype(int)
 

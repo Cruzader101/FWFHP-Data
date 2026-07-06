@@ -46,10 +46,10 @@ ax.barh(0, n_diagnosed,   color='#4a9e6b', height=0.5)
 ax.barh(0, n_undiagnosed, left=n_diagnosed, color='#e05c4b', height=0.5)
 
 ax.text(n_diagnosed / 2, 0,
-        f'Diagnosed\nn={n_diagnosed} (2.4%)',
+        f'Diagnosed\nn={n_diagnosed} ({rate:.1%})',
         ha='center', va='center', fontsize=11, color='white', fontweight='bold')
 ax.text(n_diagnosed + n_undiagnosed / 2, 0,
-        f'Never Diagnosed\nn={n_undiagnosed} (97.6%)',
+        f'Never Diagnosed\nn={n_undiagnosed} ({1 - rate:.1%})',
         ha='center', va='center', fontsize=11, color='white', fontweight='bold')
 
 ax.set_xlim(0, n_positive)
