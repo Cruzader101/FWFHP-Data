@@ -15,6 +15,12 @@ df_PHQ2 = df_PHQ2.rename(columns={"Record ID": "record_id", "PHQ-2 Score": "a_ph
 # other scripts (rows with a missing score are neither positive nor "<= 2").
 df_PHQ2 = df_PHQ2.dropna(subset=["a_phq2_score"])
 
+# Restrict to adults (>= 18) so the FWFHP denominator is age-comparable to NHANES:
+# the NHANES depression screener (DPQ) is only administered to participants 18+,
+# so keeping FWFHP children would compare an all-ages clinic to an adults-only
+# reference. Age is stored in the "Age" column of the combined export.
+df_PHQ2 = df_PHQ2[df_PHQ2["Age"] >= 18]
+
 count_FWFHP = (df_PHQ2["a_phq2_score"] > 2).sum()
 
 total_length_FWFHP = len(df_PHQ2)
@@ -114,8 +120,15 @@ df_Demo_NHANES["race_eth"] = df_Demo_NHANES["RIDRETH3"].map(ethinicity_labels).f
 # %%
 
 # merging the two NHANES datasets on SEQN
-
-demo_col = df_Demo_NHANES[['SEQN', 'RIDRETH3', 'race_eth']]
+#
+# Carry the NHANES complex-survey design columns through to the export so the
+# downstream comparison can produce weighted, design-based estimates:
+#   RIDAGEYR  = age (for the 18+ adult domain)
+#   WTMEC2YR  = MEC exam 2-year sample weight (DPQ is a MEC-administered screener)
+#   SDMVSTRA  = masked variance stratum
+#   SDMVPSU   = masked variance unit (PSU) within stratum
+demo_col = df_Demo_NHANES[['SEQN', 'RIDRETH3', 'race_eth',
+                           'RIDAGEYR', 'WTMEC2YR', 'SDMVSTRA', 'SDMVPSU']]
 DPQ_col = df_DPQ_NHANES[['SEQN', 'DPQ010', 'DPQ020', 'phq2_score']]
 
 df_merged_NHANES = pd.merge(demo_col, DPQ_col, on='SEQN', how='inner')
