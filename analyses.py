@@ -8,7 +8,7 @@ import matplotlib.ticker as mticker
 from statsmodels.stats.proportion import proportions_ztest, proportion_confint
 
 NHANES_data = pd.read_csv("./NHANES/df_Hispanic_NHANES.csv")
-FWFHP_data = pd.read_csv("./Night Camp Data/FarmWorkerFamilyHeal-DemographicDataWithP_DATA_LABELS_2026-06-28_1652.csv")
+FWFHP_data = pd.read_csv("./Night Camp Data/FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv")
 FWFHP_data = FWFHP_data.rename(columns={
     "Record ID":              "record_id",
     "PHQ-2 Score":            "a_phq2_score",
@@ -128,6 +128,13 @@ import statsmodels.formula.api as smf
 camp_outcome = FWFHP_clean.groupby("camp")["PHQ2_binary"].nunique()
 valid_camps = camp_outcome[camp_outcome > 1].index
 FWFHP_clean_no_camp7 = FWFHP_clean[FWFHP_clean["camp"].isin(valid_camps)]
+
+# Likewise drop gender levels with only one outcome (e.g. a single Transgender
+# record). Such singletons cause quasi-complete separation and stop the logistic
+# model from converging (coefficient -> +/-inf with an enormous standard error).
+gender_outcome = FWFHP_clean_no_camp7.groupby("gender")["PHQ2_binary"].nunique()
+valid_genders = gender_outcome[gender_outcome > 1].index
+FWFHP_clean_no_camp7 = FWFHP_clean_no_camp7[FWFHP_clean_no_camp7["gender"].isin(valid_genders)]
 
 explor_fit = smf.logit("PHQ2_binary ~ C(camp) + a_age + gender + drug_use", data = FWFHP_clean_no_camp7).fit()
 
