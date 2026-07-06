@@ -6,8 +6,7 @@ import matplotlib.ticker as mticker
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
 
-PHQ2_FILE = r'Night Camp Data\FarmWorkerFamilyHeal-DemographicDataWithP_DATA_LABELS_2026-06-28_1652.csv'
-DX_FILE   = r'Night Camp Data\FarmWorkerFamilyHeal-DiagnosisForCooccurr_DATA_LABELS_2026-06-28_1652.csv'
+DATA_FILE = r'Night Camp Data\FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv'
 
 # Column keys
 
@@ -26,14 +25,10 @@ DX_MAP = {
     'L55.9 Sunburn'              : 'Sunburn',
 }
 
-# %% Load and Merge Data
-phq2 = pd.read_csv(PHQ2_FILE)
-phq2 = phq2.rename(columns={"Record ID": "record_id", "PHQ-2 Score": "a_phq2_score"})
-
-dx = pd.read_csv(DX_FILE)
-dx = dx.rename(columns={"Record ID": "record_id"})
-
-df = phq2[['record_id', 'a_phq2_score']].merge(dx, on='record_id', how='inner')
+# %% Load Data
+# PHQ-2 score and all diagnosis columns now live in one unified export.
+df = pd.read_csv(DATA_FILE)
+df = df.rename(columns={"Record ID": "record_id", "PHQ-2 Score": "a_phq2_score"})
 df = df.dropna(subset=['a_phq2_score'])
 
 # DATA_LABELS export: each diagnosis column holds the text "Yes"/"No" (blank = absent).
