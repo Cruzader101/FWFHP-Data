@@ -11,6 +11,10 @@ import pyreadstat as pr
 df_PHQ2 = pd.read_csv("./Night Camp Data/FarmWorkerFamilyHeal-DemographicDataWithP_DATA_LABELS_2026-06-28_1652.csv")
 df_PHQ2 = df_PHQ2.rename(columns={"Record ID": "record_id", "PHQ-2 Score": "a_phq2_score"})
 
+# Restrict to respondents with a valid PHQ-2 score so the denominator matches the
+# other scripts (rows with a missing score are neither positive nor "<= 2").
+df_PHQ2 = df_PHQ2.dropna(subset=["a_phq2_score"])
+
 count_FWFHP = (df_PHQ2["a_phq2_score"] > 2).sum()
 
 total_length_FWFHP = len(df_PHQ2)
@@ -33,24 +37,26 @@ print(percentage_FWFHP)
 # DPQ_L.xpt is an XPORT file, not a sas7bdat file.
 df_DPQ_NHANES, meta = pr.read_xport("DPQ_L.xpt")
 
-#Looking for mismatch between DPQ010 and DPQ020
+# DPQ010/DPQ020 use 7 = refused, 9 = don't know as non-response codes.
+# A valid PHQ-2 needs BOTH items answered; any 7/9 on either item invalidates the row.
 mask010 = df_DPQ_NHANES["DPQ010"].isin([7, 9])
 mask020 = df_DPQ_NHANES["DPQ020"].isin([7, 9])
 
-mismatch = df_DPQ_NHANES[mask010 ^ mask020]
+invalid = mask010 | mask020  # either item refused/don't-know
 
-print("Mismatch count:", len(mismatch))
-print(mismatch[["DPQ010", "DPQ020"]].head(20))
+print("Rows with a refused/don't-know item:", int(invalid.sum()))
+print(df_DPQ_NHANES.loc[invalid, ["DPQ010", "DPQ020"]].head(20))
 
 # %%
 
-# Making a total score for DPQ010 and DPQ020, not counting mismatched rows
+# Total score for DPQ010 + DPQ020, only for rows where both items are valid answers.
+# (Summing a 7/9 code would fabricate a high score, e.g. 9 + 9 = 18.)
 
 df_DPQ_NHANES["phq2_score"] = np.where(
-    ~(mask010 ^ mask020),
+    ~invalid,
     df_DPQ_NHANES["DPQ010"] + df_DPQ_NHANES["DPQ020"],
     pd.NA
-) 
+)
 
 # %%
 
