@@ -15,8 +15,16 @@ FWFHP_data = FWFHP_data.rename(columns={
     "Camp":                   "camp",
     "Age":                    "a_age",
     "Sex":                    "gender",
-    "Z13.89 Drug Use Screen": "drug_use",
 })
+
+# NOTE: "Z13.89 Drug Use Screen" only records whether a drug screen was
+# performed, not the finding -- using it as "drug use" produced a spurious
+# care-process association. Use the actual result instead. Blank = not screened
+# is treated as "no documented positive screen" so this covariate does not drop
+# ~900 rows from the model; the predictor is "positive drug screen on record".
+FWFHP_data["drug_use"] = np.where(
+    FWFHP_data["Drug Use Screen Result"] == "Yes", "Yes", "No"
+)
 
 # %%
 
@@ -185,7 +193,7 @@ gender_label = gender_param.replace("gender[T.", "").replace("]", "")
 drug_label   = drug_param.replace("drug_use[T.", "").replace("]", "")
 rows.append({"Variable": "Age (per year)",           "OR": age_odds,   "Lower": ci_age[0],   "Upper": ci_age[1]})
 rows.append({"Variable": f"Gender: {gender_label}",  "OR": gender_odds,"Lower": ci_gender[0],"Upper": ci_gender[1]})
-rows.append({"Variable": f"Drug Use: {drug_label}",  "OR": drug_odds,  "Lower": ci_drug[0],  "Upper": ci_drug[1]})
+rows.append({"Variable": f"Positive drug screen: {drug_label}",  "OR": drug_odds,  "Lower": ci_drug[0],  "Upper": ci_drug[1]})
 
 forest_df = pd.DataFrame(rows)
 
