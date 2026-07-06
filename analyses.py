@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 from statsmodels.stats.proportion import proportions_ztest, proportion_confint
+from scipy.stats import norm
 
 NHANES_data = pd.read_csv("./NHANES/df_Hispanic_NHANES.csv")
 FWFHP_data = pd.read_csv("./Night Camp Data/FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv")
@@ -35,6 +36,12 @@ FWFHP_data["drug_use"] = np.where(
 NHANES_data = NHANES_data.dropna(subset=["phq2_score"])
 FWFHP_data  = FWFHP_data.dropna(subset=["a_phq2_score"])
 
+# Age-match the two cohorts: NHANES only screens adults (18+) for depression, so
+# restrict both sides to 18+. This makes the FWFHP denominator comparable and
+# defines the NHANES adult Hispanic domain used for the weighted estimate below.
+NHANES_data = NHANES_data[NHANES_data["RIDAGEYR"] >= 18]
+FWFHP_data  = FWFHP_data[FWFHP_data["a_age"] >= 18]
+
 NHANES_data["PHQ2_binary"] = (NHANES_data["phq2_score"] > 2).astype(int)
 FWFHP_data["PHQ2_binary"] = (FWFHP_data["a_phq2_score"] > 2).astype(int)
 
@@ -57,39 +64,73 @@ print("NHANES No count:", len(NHANES_no))
 
 # %%
 
-# Odds Ratio
+# Design-based weighted NHANES prevalence
+#
+# NHANES is a complex, multistage probability sample. A raw (unweighted) rate
+# over-represents oversampled subgroups and understates the true variance. The
+# defensible comparison uses the survey weight (WTMEC2YR) for the point estimate
+# and Taylor linearization over strata (SDMVSTRA) / PSUs (SDMVPSU) for the SE.
 
-odds_FWFHP = len(FWFHP_yes) / len(FWFHP_no)
-odds_NHANES = len(NHANES_yes) / len(NHANES_no)
+def weighted_prop_design(y, w, strata, psu):
+    """Weighted proportion and Taylor-linearized design-based SE for a survey
+    subpopulation (with-replacement PSU approximation, per NHANES guidance)."""
+    y = np.asarray(y, float); w = np.asarray(w, float)
+    strata = np.asarray(strata); psu = np.asarray(psu)
+    W = w.sum()
+    p = np.sum(w * y) / W
+    u = w * (y - p) / W          # linearized residual contribution to p
+    var = 0.0
+    for h in np.unique(strata):
+        hmask = strata == h
+        psu_totals = np.array([u[hmask & (psu == j)].sum()
+                               for j in np.unique(psu[hmask])])
+        n_h = len(psu_totals)
+        if n_h < 2:
+            continue             # single-PSU stratum: no between-PSU variance
+        var += n_h / (n_h - 1) * np.sum((psu_totals - psu_totals.mean()) ** 2)
+    return p, np.sqrt(var)
 
-print("Odds FWFHP:", odds_FWFHP)
-print("Odds NHANES:", odds_NHANES)
+p_nhanes, se_nhanes = weighted_prop_design(
+    NHANES_data["PHQ2_binary"].values, NHANES_data["WTMEC2YR"].values,
+    NHANES_data["SDMVSTRA"].values,    NHANES_data["SDMVPSU"].values)
 
-odds_ratio = odds_FWFHP / odds_NHANES
+# Logit-transformed CI so the interval stays inside (0, 1)
+logit_n    = np.log(p_nhanes / (1 - p_nhanes))
+se_logit_n = se_nhanes / (p_nhanes * (1 - p_nhanes))
+ci_nhanes  = (1 / (1 + np.exp(-(logit_n - 1.96 * se_logit_n))),
+              1 / (1 + np.exp(-(logit_n + 1.96 * se_logit_n))))
+print(f"NHANES weighted PHQ-2 positive: {p_nhanes:.4f} "
+      f"(95% CI: {ci_nhanes[0]:.4f}-{ci_nhanes[1]:.4f}); design SE = {se_nhanes:.4f}; "
+      f"unweighted n = {len(NHANES_data)}")
 
-print("Odds Ratio:", odds_ratio)
+# %%
 
-# OR confidence interval (delta method on log-odds) and two-proportion z-test
-log_or     = np.log(odds_ratio)
-se_log_or  = np.sqrt(1/len(FWFHP_yes) + 1/len(FWFHP_no) + 1/len(NHANES_yes) + 1/len(NHANES_no))
-or_lower   = np.exp(log_or - 1.96 * se_log_or)
-or_upper   = np.exp(log_or + 1.96 * se_log_or)
+# Odds ratio: FWFHP (clinic census, binomial) vs NHANES (survey-weighted population)
+#
+# FWFHP is a full clinic sample -> simple binomial variance for its logit.
+# NHANES logit variance comes from the design-based SE above (delta method).
+# The two logits are independent, so the log-OR variance is their sum.
+p_fwfhp     = len(FWFHP_yes) / (len(FWFHP_yes) + len(FWFHP_no))
+logit_f     = np.log(len(FWFHP_yes) / len(FWFHP_no))
+var_logit_f = 1 / len(FWFHP_yes) + 1 / len(FWFHP_no)
 
-z_stat, p_nhanes_cmp = proportions_ztest(
-    [len(FWFHP_yes), len(NHANES_yes)],
-    [len(FWFHP_yes) + len(FWFHP_no), len(NHANES_yes) + len(NHANES_no)]
-)
-print(f"OR: {odds_ratio:.3f} (95% CI: {or_lower:.3f}–{or_upper:.3f})")
-print(f"Two-proportion z-test: z = {z_stat:.3f}, p = {p_nhanes_cmp:.4e}")
+log_or     = logit_f - logit_n
+se_logor   = np.sqrt(var_logit_f + se_logit_n ** 2)
+odds_ratio = np.exp(log_or)
+or_lower   = np.exp(log_or - 1.96 * se_logor)
+or_upper   = np.exp(log_or + 1.96 * se_logor)
 
-# NHANES comparison chart with CI
-p_fwfhp  = len(FWFHP_yes) / (len(FWFHP_yes) + len(FWFHP_no))
-p_nhanes = len(NHANES_yes) / (len(NHANES_yes) + len(NHANES_no))
-ci_fwfhp  = proportion_confint(len(FWFHP_yes),  len(FWFHP_yes) + len(FWFHP_no),  method='normal')
-ci_nhanes = proportion_confint(len(NHANES_yes), len(NHANES_yes) + len(NHANES_no), method='normal')
+z_stat       = log_or / se_logor
+p_nhanes_cmp = 2 * norm.sf(abs(z_stat))
+print(f"FWFHP PHQ-2 positive: {p_fwfhp:.4f} (n = {len(FWFHP_yes) + len(FWFHP_no)})")
+print(f"OR (design-aware): {odds_ratio:.3f} (95% CI: {or_lower:.3f}-{or_upper:.3f})")
+print(f"Design-aware z-test: z = {z_stat:.3f}, p = {p_nhanes_cmp:.4e}")
+
+# NHANES comparison chart with CI (FWFHP: Wilson binomial; NHANES: design-based)
+ci_fwfhp = proportion_confint(len(FWFHP_yes), len(FWFHP_yes) + len(FWFHP_no), method='wilson')
 
 fig, ax = plt.subplots(figsize=(7, 5))
-groups = ['FWFHP\n(Migrant Farmworkers)', 'NHANES\n(Hispanic Reference)']
+groups = ['FWFHP\n(Migrant Farmworkers)', 'NHANES\n(Hispanic Adults, weighted)']
 props  = [p_fwfhp, p_nhanes]
 yerr   = [[p_fwfhp - ci_fwfhp[0], p_nhanes - ci_nhanes[0]],
           [ci_fwfhp[1] - p_fwfhp, ci_nhanes[1] - p_nhanes]]
@@ -99,9 +140,9 @@ ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1, decimals=1))
 ax.set_ylabel('PHQ-2 Positive Rate (%)')
 p_label = "p < 0.001" if p_nhanes_cmp < 0.001 else f"p = {p_nhanes_cmp:.4f}"
 ax.set_title(
-    f'PHQ-2 Positive Prevalence: FWFHP vs. NHANES Hispanic\n'
-    f'OR = {odds_ratio:.2f} (95% CI: {or_lower:.2f}–{or_upper:.2f}), {p_label}',
-    fontsize=12, fontweight='bold'
+    f'PHQ-2 Positive Prevalence: FWFHP vs. NHANES Hispanic Adults\n'
+    f'OR = {odds_ratio:.2f} (95% CI: {or_lower:.2f}-{or_upper:.2f}), {p_label}  (NHANES survey-weighted)',
+    fontsize=11, fontweight='bold'
 )
 for bar, prop in zip(bars, props):
     ax.text(bar.get_x() + bar.get_width() / 2, prop + 0.002,
