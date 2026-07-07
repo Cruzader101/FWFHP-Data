@@ -1,5 +1,6 @@
-# Night Camp data — transferred manually
-Night Camp/
+# Patient clinical data — transferred manually, keep out of git (PHI)
+Night Camp Data/
+archive/
 
 # Python
 __pycache__/
