@@ -1,8 +1,10 @@
-# Night Camp data — transferred manually
-Night Camp/
+# Patient clinical data — transferred manually, keep out of git (PHI)
+Night Camp Data/
+archive/
 
-# Local Claude Code settings
+# Local Claude Code settings & worktrees (may contain copies of the above)
 .claude/settings.local.json
+.claude/worktrees/
 
 # Python
 __pycache__/
