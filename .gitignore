@@ -2,6 +2,9 @@
 Night Camp Data/
 archive/
 
+# graphify knowledge-graph output (generated)
+graphify-out/
+
 # Python
 __pycache__/
 *.py[cod]
