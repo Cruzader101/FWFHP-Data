@@ -207,15 +207,15 @@ img, video, canvas, svg { max-width: 100%; max-height: 100%; }
 }
 .context-bullets { display: flex; flex-direction: column; gap: 20px; }
 .context-bullet {
-    display: flex; gap: 16px; align-items: flex-start;
+    position: relative; padding-left: 34px;
     font-family: var(--font-body);
     font-size: 24px; font-weight: 300;
     color: var(--text-primary); line-height: 1.5;
 }
 .context-bullet::before {
     content: '—';
+    position: absolute; left: 0; top: 0;
     color: var(--accent-blue); font-weight: 500;
-    flex-shrink: 0; margin-top: 1px;
 }
 .context-bullet strong { font-weight: 500; }
 .question-card {
@@ -253,7 +253,8 @@ img, video, canvas, svg { max-width: 100%; max-height: 100%; }
 .stat-card .sc-label {
     font-family: var(--font-body);
     font-size: 18px; font-weight: 500;
-    letter-spacing: 0.12em; text-transform: uppercase;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    white-space: nowrap;
     color: var(--text-secondary); margin-bottom: 20px;
 }
 .stat-card .sc-num {
@@ -643,14 +644,14 @@ img, video, canvas, svg { max-width: 100%; max-height: 100%; }
     <div class="slide-body" style="display:flex;align-items:center;justify-content:center;">
         <div class="stat-row">
             <div class="stat-card red reveal">
-                <p class="sc-label">Positive Screen &mdash; PHQ-2 &gt; 2</p>
+                <p class="sc-label">Positive Screen &mdash; PHQ-2&nbsp;&gt;&nbsp;2</p>
                 <p class="sc-num">61</p>
                 <p class="sc-pct">3.2% of adults</p>
                 <p class="sc-desc">Screened positive for<br>depressive symptoms</p>
             </div>
             <div class="stat-vs reveal"></div>
             <div class="stat-card blue reveal">
-                <p class="sc-label">Negative Screen &mdash; PHQ-2 &le; 2</p>
+                <p class="sc-label">Negative Screen &mdash; PHQ-2&nbsp;&le;&nbsp;2</p>
                 <p class="sc-num">1,828</p>
                 <p class="sc-pct">96.8% of adults</p>
                 <p class="sc-desc">Below the clinical<br>concern threshold</p>
@@ -836,7 +837,7 @@ img, video, canvas, svg { max-width: 100%; max-height: 100%; }
     <div class="slide-body">
         <div class="chart-body">
             <div class="chart-wrap reveal">
-                <img src="charts/chart1_p_high_phq2.png" alt="Bar chart: conditional probability of each physical diagnosis among the 42 patients with PHQ-2 greater than 2">
+                <img src="charts/chart1_p_high_phq2.png" alt="Bar chart: conditional probability of each physical diagnosis among the 61 patients with PHQ-2 greater than 2">
             </div>
             <p class="chart-caption reveal">Conditional probability of each physical diagnosis among the <strong>61 patients</strong> who screened positive (PHQ-2 &gt; 2). Elevated BP is the most common co-occurring condition at 6.6%.</p>
         </div>
