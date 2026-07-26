@@ -50,10 +50,11 @@ dx_cols = list(DX_MAP.keys())
 for col in dx_cols:
     df[col] = (df[col] == "Yes").astype(int)
 
-# Whole-clinic scope (no 18+ filter) to stay apples-to-apples with the binary
-# script. All PHQ-2 positives are adults anyway, so the positive-side signal is
-# effectively adults-only either way.
-print(f"Responders with a PHQ-2 score: n = {len(df)}")
+# Adults (>= 18) only, matching analyses.py and co_occurences.py: one consistent
+# analytic cohort across every paper analysis.
+df = df[df['Age'] >= 18]
+
+print(f"Adult responders with a PHQ-2 score: n = {len(df)}")
 print(f"PHQ-2 score distribution:\n{df['a_phq2_score'].value_counts().sort_index().to_string()}")
 
 # %% Per-diagnosis logistic regression: Dx ~ a_phq2_score

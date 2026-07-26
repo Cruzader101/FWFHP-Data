@@ -31,6 +31,10 @@ df = pd.read_csv(DATA_FILE)
 df = df.rename(columns={"Record ID": "record_id", "PHQ-2 Score": "a_phq2_score"})
 df = df.dropna(subset=['a_phq2_score'])
 
+# Adults (>= 18) only, matching analyses.py: one consistent analytic cohort across
+# every paper analysis (PHQ-2 is an adult screener; NHANES DPQ is 18+ only).
+df = df[df['Age'] >= 18]
+
 # DATA_LABELS export: each diagnosis column holds the text "Yes"/"No" (blank = absent).
 dx_cols = list(DX_MAP.keys())
 for col in dx_cols:
