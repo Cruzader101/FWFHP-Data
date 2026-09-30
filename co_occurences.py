@@ -6,7 +6,9 @@ import matplotlib.ticker as mticker
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
 
-DATA_FILE = r'Night Camp Data\FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv'
+from data_paths import FWFHP_EXPORT
+
+DATA_FILE = FWFHP_EXPORT
 
 # Column keys
 

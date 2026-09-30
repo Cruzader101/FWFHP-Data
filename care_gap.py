@@ -3,7 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.stats.proportion import proportion_confint
 
-DEMO_FILE = r'Night Camp Data\FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv'
+from data_paths import FWFHP_EXPORT
+
+DEMO_FILE = FWFHP_EXPORT
 
 df = pd.read_csv(DEMO_FILE)
 df = df.rename(columns={

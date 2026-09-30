@@ -20,7 +20,9 @@ import statsmodels.formula.api as smf
 from statsmodels.stats.multitest import multipletests
 from statsmodels.tools.sm_exceptions import PerfectSeparationError
 
-DATA_FILE = r'Night Camp Data\FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv'
+from data_paths import FWFHP_EXPORT
+
+DATA_FILE = FWFHP_EXPORT
 
 # Column keys -> short display names (identical to co_occurences.py so the binary
 # and continuous results line up row-for-row).

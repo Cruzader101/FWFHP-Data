@@ -29,7 +29,9 @@ import statsmodels.formula.api as smf
 from scipy.stats import chi2
 from statsmodels.stats.multitest import multipletests
 
-DATA_FILE = r'Night Camp Data\FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv'
+from data_paths import FWFHP_EXPORT
+
+DATA_FILE = FWFHP_EXPORT
 
 # Identical to the sibling scripts so rows line up across all three analyses.
 DX_MAP = {
