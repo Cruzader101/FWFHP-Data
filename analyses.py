@@ -8,8 +8,10 @@ import matplotlib.ticker as mticker
 from statsmodels.stats.proportion import proportions_ztest, proportion_confint
 from scipy.stats import norm
 
+from data_paths import FWFHP_EXPORT
+
 NHANES_data = pd.read_csv("./NHANES/df_Hispanic_NHANES.csv")
-FWFHP_data = pd.read_csv("./Night Camp Data/FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv")
+FWFHP_data = pd.read_csv(FWFHP_EXPORT)
 FWFHP_data = FWFHP_data.rename(columns={
     "Record ID":              "record_id",
     "PHQ-2 Score":            "a_phq2_score",

@@ -6,9 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pyreadstat as pr
 
+from data_paths import FWFHP_EXPORT
+
 # Loading PHQ-2 data, total score over 2 and percentage
 
-df_PHQ2 = pd.read_csv("./Night Camp Data/FarmWorkerFamilyHeal-2426FWFHPDataAnalysi_DATA_LABELS_2026-07-06_1745.csv")
+df_PHQ2 = pd.read_csv(FWFHP_EXPORT)
 df_PHQ2 = df_PHQ2.rename(columns={"Record ID": "record_id", "PHQ-2 Score": "a_phq2_score"})
 
 # Restrict to respondents with a valid PHQ-2 score so the denominator matches the

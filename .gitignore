@@ -1,6 +1,12 @@
 # Patient clinical data — transferred manually, keep out of git (PHI)
 Night Camp Data/
+Night Camp/
 archive/
+# Any REDCap export from this project, wherever it gets saved
+FarmWorkerFamilyHeal*
+*_DATA_LABELS_*.csv
+# Console output from run_all.py (derived from patient data)
+logs/
 
 # graphify knowledge-graph output (generated)
 graphify-out/
